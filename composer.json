@@ -1,0 +1,26 @@
+{
+    "name": "mgribov/apiscrape",
+    "description": "Generic HTTP REST API scraper with local cache",
+    "keywords": ["json", "scrape", "api", "php"],
+    "type": "library",
+    "homepage": "https://github.com/mgribov/apiscrape",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Max Gribov",
+            "email": "max@neuropunks.org",
+            "homepage": "https://github.com/mgribov"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Scrape\\": "src/Scrape"
+        }
+    }
+}
+
