@@ -69,18 +69,25 @@ class HttpClient implements HttpClientInterface {
             
         } elseif ($this->auth instanceof \Scrape\Auth\Url) {
             
-            if ($this->auth->getUserField()) {
+            if ($this->auth->getUserField() && $this->auth->getUser()) {
                 $params[$this->auth->getUserField()] = $this->auth->getUser(); 
             }
             
-            if ($this->auth->getSecretField()) {
+            if ($this->auth->getSecretField() && $this->auth->getSecret()) {
                 $params[$this->auth->getSecretField()] = $this->auth->getSecret();
             }
         }
 
         $params = http_build_query($params);
-        $path = strlen($params) ? $path . '?' . $params : $path;
-
+        
+        if (strlen($params)) {
+            if (preg_match('/\?/', $path)) {
+                $path .= '&' . $params; 
+            } else {
+                $path .= '?' . $params;
+            }
+        }
+                
         // for GETs check local storage first
         if ($this->storage && $method == 'GET') {
             $current = $this->storage->get($path);
@@ -123,7 +130,7 @@ class HttpClient implements HttpClientInterface {
             throw new \Exception($error, $code);
         }
 
-        if ($this->storage && $method == 'GET') {
+        if ($this->storage && $method == 'GET') {            
             $this->storage->save($path, $response, $res['header']);
             
             // it is possible that response before only contained 304 and not actual response

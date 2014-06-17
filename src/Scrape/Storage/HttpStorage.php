@@ -66,7 +66,11 @@ class HttpStorage implements HttpStorageInterface {
      * @return string
      */
     public function getEtag() {
-        return $this->object['etag'];
+        if (array_key_exists('etag', $this->object)) {
+            return $this->object['etag']; 
+        }
+        
+        return null;
     }
     
     /**

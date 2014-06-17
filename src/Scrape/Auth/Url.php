@@ -20,8 +20,13 @@ class Url implements AuthInterface {
             $this->userField = $config['secret_field'];
         }
         
-        $this->user = $config['user'];
-        $this->secret = $config['secret'];
+        if (array_key_exists('user', $config)) {
+            $this->user = $config['user'];
+        }
+        
+        if (array_key_exists('secret', $config)) {
+            $this->secret = $config['secret'];
+        }
     }
         
     public function getUser() {
