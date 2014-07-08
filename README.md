@@ -22,6 +22,8 @@ See [src/Scrape/Auth](https://github.com/mgribov/apiscrape/tree/master/src/Scrap
     ./composer.phar require mgribov/apiscrape
 
 ## Examples
+For a real-world complex example which inspired this library see [Triptelligent PHP API wrapper](https://github.com/mgribov/php-triptelligent)
+
 See [examples/](https://github.com/mgribov/apiscrape/tree/master/examples) folder for all use cases  
 Make sure you install composer and run "./composer.phar dump-autoload" first to use the examples if you just want to play around with it
 
