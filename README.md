@@ -1,3 +1,5 @@
+[![Code Climate](https://codeclimate.com/github/mgribov/apiscrape.png)](https://codeclimate.com/github/mgribov/apiscrape) 
+
 # JSON API scraper with local cache
 
 ## Motivation - a transparent GET cache
