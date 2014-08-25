@@ -7,6 +7,8 @@ namespace Scrape\Client;
  */
 class HttpClient implements HttpClientInterface {
 
+    protected static $HTTP_CODE_OK = array(200, 304);
+
     protected $storage;
     protected $auth;    
     protected $debug;
@@ -121,16 +123,13 @@ class HttpClient implements HttpClientInterface {
                 $code = $response['status'];
             }
 
-        } elseif (strlen($res['error'])) {
-            $error = "cURL returned error: {$res['error']}";
-            $code = $res['code'];
+        } elseif (strlen($res['error']) || !in_array($res['code'], self::$HTTP_CODE_OK)) {
+            $error = "cURL did not return a success code: {$res['code']} {$res['error']}";
+            $this->__debug($path . ": $error");
         }
 
-        if (strlen($error)) {
-            throw new \Exception($error, $code);
-        }
-
-        if ($this->storage && $method == 'GET') {            
+        // only cache success
+        if (in_array($res['code'], self::$HTTP_CODE_OK) && $this->storage && $method == 'GET') {            
             $this->storage->save($path, $response, $res['header']);
             
             // it is possible that response before only contained 304 and not actual response
