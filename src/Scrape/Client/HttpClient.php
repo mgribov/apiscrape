@@ -98,7 +98,6 @@ class HttpClient implements HttpClientInterface {
                 
                 if ($this->storage->isCurrent()) {
                     $this->__debug($path . ': found current copy, serving from cache');
-                    
                     return $this->storage->getResponse();
                 } 
 
@@ -114,27 +113,26 @@ class HttpClient implements HttpClientInterface {
         $res = $this->__curl($path, $method, $headers);
         $response =  json_decode($res['body'], true);
 
-        $error = null;
-        $code = 0;
-        if (is_array($response) && array_key_exists('error', $response)) {
-            $error = "Got error from server: " . $response['error'];
-            if (array_key_exists('status', $response)) {
-                $error .= " Status: " . $response['status'];
-                $code = $response['status'];
+        if (strlen($res['error']) || !in_array($res['code'], self::$HTTP_CODE_OK)) {
+            $this->__debug($path . ": cURL did not return a success code: {$res['code']} {$res['error']}");
+
+        } elseif (in_array($res['code'], self::$HTTP_CODE_OK) && $this->storage && $method == 'GET') {            
+
+            // @todo may be wrap this all in 1 call in HttpStorage
+            switch ($res['code']) {
+                case 200:
+                    $this->__debug("got 200 for $path, saving locally");
+                    $this->storage->save($path, $response, $res['header']);
+                    break;
+
+                // 304 will return empty data from server, so load object from storage and bump its cache timer
+                case 304:
+                    $this->__debug("got 304 for $path, bumping local cache timer");
+                    $this->storage->bumpCache($path);
+                    $response = $this->storage->getResponse();
+                    break;
             }
-
-        } elseif (strlen($res['error']) || !in_array($res['code'], self::$HTTP_CODE_OK)) {
-            $error = "cURL did not return a success code: {$res['code']} {$res['error']}";
-            $this->__debug($path . ": $error");
-        }
-
-        // only cache success
-        if (in_array($res['code'], self::$HTTP_CODE_OK) && $this->storage && $method == 'GET') {            
-            $this->storage->save($path, $response, $res['header']);
-            
-            // it is possible that response before only contained 304 and not actual response
-            // so we make sure we get current response data from storage
-            $response = $this->storage->getResponse();
+                    
         }
         
         return $response;
