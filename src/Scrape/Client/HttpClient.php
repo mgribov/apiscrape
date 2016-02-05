@@ -57,10 +57,9 @@ class HttpClient implements HttpClientInterface {
      * @return array - exact return from API as an object
      * @throws \Exception 
      */
-    public function request($path, $params = array(), $method = 'GET') {
+    public function request($path, $params = array(), $method = 'GET', $headers = array()) {
         $etag = null;
         $current = false;
-        $headers = array();
                 
         // determine how to handle auth for this request
         // 
@@ -79,20 +78,11 @@ class HttpClient implements HttpClientInterface {
                 $params[$this->auth->getSecretField()] = $this->auth->getSecret();
             }
         }
-
-        $params = http_build_query($params);
-        
-        if (strlen($params)) {
-            if (preg_match('/\?/', $path)) {
-                $path .= '&' . $params; 
-            } else {
-                $path .= '?' . $params;
-            }
-        }
                 
         // for GETs check local storage first
         if ($this->storage && $method == 'GET') {
             $current = $this->storage->get($path);
+            #var_dump($path);
             
             if ($current) {
                 
@@ -110,7 +100,7 @@ class HttpClient implements HttpClientInterface {
             }
         }
         
-        $res = $this->__curl($path, $method, $headers);
+        $res = $this->__curl($path, $method, $params, $headers);
         $response =  json_decode($res['body'], true);
 
         if (strlen($res['error']) || !in_array($res['code'], self::$HTTP_CODE_OK)) {
@@ -147,7 +137,7 @@ class HttpClient implements HttpClientInterface {
      * @param array $headers
      * @return array 
      */
-    protected function __curl($path, $method = 'GET', array $headers = array()) {
+    protected function __curl($path, $method = 'GET', array $params = array(), array $headers = array()) {
         $ret = array();
         
         // only JSON for now
@@ -158,9 +148,29 @@ class HttpClient implements HttpClientInterface {
         $options[CURLOPT_RETURNTRANSFER] = true;
         $options[CURLOPT_HEADER] = true;
         $options[CURLOPT_TIMEOUT] = $this->timeout;
-        $options[CURLOPT_URL] = $path;
         $options[CURLOPT_CUSTOMREQUEST] = $method;
         $options[CURLOPT_HTTPHEADER] = $headers;
+
+        if ($method == 'POST') {
+            // not doing this, since we are json-only for now
+            //$options[CURLOPT_POST] = 1;
+
+            $options[CURLOPT_POSTFIELDS] = json_encode($params);            
+
+        } elseif ($method == 'GET') {
+            $par = http_build_query($params);
+
+            if (strlen($par)) {
+                if (preg_match('/\?/', $path)) {
+                    $path .= '&' . $par;
+                } else {
+                    $path .= '?' . $par;
+                }
+            }
+
+        }
+
+        $options[CURLOPT_URL] = $path;
 
         $curl = curl_init();
         curl_setopt_array($curl, $options); 
