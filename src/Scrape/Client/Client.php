@@ -61,6 +61,10 @@ class Client {
             }
         }
     }
+
+    public function getHttpClient() {
+        return $this->http_client;
+    }
     
     public function setCurlTimeout($sec) {
         $this->http_client->setTimeout($sec);

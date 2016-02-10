@@ -91,6 +91,10 @@ class HttpStorage implements HttpStorageInterface {
      * @return bool
      */
     public function isCurrent() {
+        if ($this->cacheTime == 0) {
+            return false;
+        }
+
         return (is_array($this->object['response']) && count($this->object['response']) > 0 && $this->object['cache'] > time());
     }
 
@@ -109,6 +113,17 @@ class HttpStorage implements HttpStorageInterface {
      * @return array 
      */
     public function get($path) {
+        if ($this->cacheTime == 0) {
+            $this->backend->delete($path);
+
+            return [
+                'path' => null,
+                'cache' => null,
+                'etag' => null,
+                'response' => null,
+            ];
+        }
+
         $this->object = $this->backend->get($path);        
         return $this->object;
     }
@@ -145,6 +160,10 @@ class HttpStorage implements HttpStorageInterface {
         if (!(is_array($response) && count($response) > 0)) {
             $this->__debug("no valid response for $path, will not save, invalidating any saved copy");            
             $this->backend->delete($path);
+            return false;
+        }
+
+        if ($this->cacheTime == 0) {
             return false;
         }
 
