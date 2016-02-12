@@ -78,23 +78,33 @@ class HttpClient implements HttpClientInterface {
                 $params[$this->auth->getSecretField()] = $this->auth->getSecret();
             }
         }
-                
+
         // for GETs check local storage first
         if ($this->storage && $method == 'GET') {
-            $current = $this->storage->get($path);
-            #var_dump($path);
+            $path_get = $path;
+            $par = http_build_query($params);
+
+            if (strlen($par)) {
+                if (preg_match('/\?/', $path)) {
+                    $path_get .= '&' . $par;
+                } else {
+                    $path_get .= '?' . $par;
+                }
+            }
+
+            $current = $this->storage->get($path_get);
             
             if ($current) {
                 
                 if ($this->storage->isCurrent()) {
-                    $this->__debug($path . ': found current copy, serving from cache');
+                    $this->__debug($path_get . ': found current copy, serving from cache');
                     return $this->storage->getResponse();
                 } 
 
                 $etag = $this->storage->getEtag();
 
                 if ($etag) {
-                    $this->__debug($path . ': found current etag will try to use it');
+                    $this->__debug($path_get . ': found current etag will try to use it');
                     $headers[] = 'If-None-Match: "' . $etag . '"';
                 }
             }
