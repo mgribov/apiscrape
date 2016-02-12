@@ -58,6 +58,7 @@ class HttpClient implements HttpClientInterface {
      * @throws \Exception 
      */
     public function request($path, $params = array(), $method = 'GET', $headers = array()) {
+        $path_get = $path;
         $etag = null;
         $current = false;
                 
@@ -81,7 +82,6 @@ class HttpClient implements HttpClientInterface {
 
         // for GETs check local storage first
         if ($this->storage && $method == 'GET') {
-            $path_get = $path;
             $par = http_build_query($params);
 
             if (strlen($par)) {
@@ -121,14 +121,14 @@ class HttpClient implements HttpClientInterface {
             // @todo may be wrap this all in 1 call in HttpStorage
             switch ($res['code']) {
                 case 200:
-                    $this->__debug("got 200 for $path, saving locally");
-                    $this->storage->save($path, $response, $res['header']);
+                    $this->__debug("got 200 for $path_get, saving locally");
+                    $this->storage->save($path_get, $response, $res['header']);
                     break;
 
                 // 304 will return empty data from server, so load object from storage and bump its cache timer
                 case 304:
-                    $this->__debug("got 304 for $path, bumping local cache timer");
-                    $this->storage->bumpCache($path);
+                    $this->__debug("got 304 for $path_get, bumping local cache timer");
+                    $this->storage->bumpCache($path_get);
                     $response = $this->storage->getResponse();
                     break;
             }
