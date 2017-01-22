@@ -14,8 +14,15 @@ class HttpClient implements HttpClientInterface {
     protected $debug;
     protected $timeout = 10;
     
+    public $ret = [];
+    public $req = [];
+    
     public function setAuth(\Scrape\Auth\AuthInterface $auth) {
         $this->auth = $auth;
+    }
+    
+    public function getAuth() {
+        return $this->auth;
     }
 
     /**
@@ -109,7 +116,7 @@ class HttpClient implements HttpClientInterface {
                 }
             }
         }
-        
+
         $res = $this->__curl($path, $method, $params, $headers);
         $response =  json_decode($res['body'], true);
 
@@ -134,7 +141,7 @@ class HttpClient implements HttpClientInterface {
             }
                     
         }
-        
+
         return $response;
 
     }
@@ -148,7 +155,7 @@ class HttpClient implements HttpClientInterface {
      * @return array 
      */
     protected function __curl($path, $method = 'GET', array $params = array(), array $headers = array()) {
-        $ret = array();
+        $this->ret = [];
         
         // only JSON for now
         $headers[] = 'Content-Type: application/json';
@@ -182,18 +189,25 @@ class HttpClient implements HttpClientInterface {
 
         $options[CURLOPT_URL] = $path;
 
+        $this->req = [
+            'path' => $path, 
+            'method' => $method, 
+            'headers' => $headers, 
+            'options' => $options,
+        ];
+        
         $curl = curl_init();
         curl_setopt_array($curl, $options); 
         
         $resp = curl_exec($curl);
         $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
-        $ret['header'] = substr($resp, 0, $header_size);
-        $ret['body'] = substr($resp, $header_size);        
-        $ret['error'] = curl_error($curl);
-        $ret['code'] = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $this->ret['header'] = substr($resp, 0, $header_size);
+        $this->ret['body'] = substr($resp, $header_size);        
+        $this->ret['error'] = curl_error($curl);
+        $this->ret['code'] = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
-
-        return $ret;        
+        
+        return $this->ret;        
         
     }
 
